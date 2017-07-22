@@ -19,20 +19,23 @@ type Scene interface {
 	ID() string
 	FirstPage() string
 	GetPage(string) Page
+	NextScene() string
 }
 
 type simpleScene struct {
 	id        string
 	firstPage string
 	pages     map[string]Page
+	next      string
 }
 
 // SimpleScene allows straightforwardly constructing a scene which needs no custom logic.
-func SimpleScene(id string, firstPage string, pages map[string]Page) Scene {
+func SimpleScene(id string, firstPage string, pages map[string]Page, next string) Scene {
 	return &simpleScene{
 		id:        id,
 		firstPage: firstPage,
 		pages:     pages,
+		next:      next,
 	}
 }
 
@@ -46,6 +49,10 @@ func (s *simpleScene) FirstPage() string {
 
 func (s *simpleScene) GetPage(id string) Page {
 	return s.pages[id]
+}
+
+func (s *simpleScene) NextScene() string {
+	return s.next
 }
 
 // A Page represents a single "page" within a scene, which may display

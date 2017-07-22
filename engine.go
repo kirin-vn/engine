@@ -35,7 +35,7 @@ func (e *Engine) CurrentPage() Page {
 
 // AtEnding tests whether the read-through has reached an ending to the story.
 func (e *Engine) AtEnding() bool {
-	return e.CurrentPage().NextPage() == "" // todo allow scene transitions
+	return e.CurrentPage().NextPage() == "" && e.currentScene().NextScene() == ""
 }
 
 // GoToNextPage moves to the next page. If the page is the end of its scene,
@@ -45,5 +45,14 @@ func (e *Engine) GoToNextPage() {
 	if e.AtEnding() {
 		panic("Endings don't have a next page.")
 	}
-	e.page = e.CurrentPage().NextPage()
+	if nextPage := e.CurrentPage().NextPage(); nextPage != "" {
+		e.page = e.CurrentPage().NextPage()
+	} else {
+		e.startScene(e.currentScene().NextScene())
+	}
+}
+
+func (e *Engine) startScene(scene string) {
+	e.scene = scene
+	e.page = e.currentScene().FirstPage()
 }
