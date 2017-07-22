@@ -54,18 +54,21 @@ func (s *simpleScene) GetPage(id string) Page {
 type Page interface {
 	ID() string
 	Text() string
+	NextPage() string
 }
 
 type simplePage struct {
 	id   string
 	text string
+	next string
 }
 
 // SimplePage allows straightforwardly constructing a page which needs no custom logic.
-func SimplePage(id string, text string) Page {
+func SimplePage(id string, text string, next string) Page {
 	return &simplePage{
 		id:   id,
 		text: text,
+		next: next,
 	}
 }
 
@@ -75,4 +78,8 @@ func (pg *simplePage) ID() string {
 
 func (pg *simplePage) Text() string {
 	return pg.text
+}
+
+func (pg *simplePage) NextPage() string {
+	return pg.next
 }

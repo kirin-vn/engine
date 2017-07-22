@@ -24,12 +24,26 @@ func (e *Engine) Name() string {
 	return e.novel.Name
 }
 
+func (e *Engine) currentScene() Scene {
+	return e.novel.Scenes[e.scene]
+}
+
 // CurrentPage returns the page that the reader is currently reading.
 func (e *Engine) CurrentPage() Page {
-	return e.novel.Scenes[e.scene].GetPage(e.page)
+	return e.currentScene().GetPage(e.page)
 }
 
 // AtEnding tests whether the read-through has reached an ending to the story.
 func (e *Engine) AtEnding() bool {
-	return true // TODO allow page/scene transitions
+	return e.CurrentPage().NextPage() == "" // todo allow scene transitions
+}
+
+// GoToNextPage moves to the next page. If the page is the end of its scene,
+// it will also transition to the next scene. It must not be called when
+// AtEnding() is true; in this case it will panic.
+func (e *Engine) GoToNextPage() {
+	if e.AtEnding() {
+		panic("Endings don't have a next page.")
+	}
+	e.page = e.CurrentPage().NextPage()
 }
