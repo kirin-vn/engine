@@ -1,5 +1,15 @@
 package engine
 
+import (
+	"errors"
+	"fmt"
+	"io"
+	"log"
+	"strings"
+
+	"github.com/kirin-vn/lexer"
+)
+
 // A Novel is a data structure representing a visual novel.
 // It's the script of the game. It defines what scenes there are,
 // what pages and those scenes contain,
@@ -12,6 +22,47 @@ type Novel struct {
 	Name       string
 	FirstScene string
 	Scenes     map[string]Scene
+}
+
+// NewNovel initializes a new novel without any scenes defined.
+func NewNovel(name, firstScene string) *Novel {
+	return &Novel{
+		Name:       name,
+		FirstScene: firstScene,
+		Scenes:     make(map[string]Scene),
+	}
+}
+
+// ParseScene uses the lexer to parse a scene from an io.Reader
+// and add it to the novel.
+func (novel *Novel) ParseScene(name, nextScene string, reader io.Reader) error {
+	var pageList []string
+	for token := range lexer.Tokenize(reader) {
+		switch token.Name {
+		case lexer.Line:
+			pageList = append(pageList, strings.Join(token.Args, ""))
+		default:
+			log.Printf("Unrecognized kind of token: %s\n", token.Name)
+		}
+	}
+	if len(pageList) == 0 {
+		return errors.New("tried to parse empty scene")
+	}
+	pages := make(map[string]Page)
+	var prevID string
+	for i := len(pageList) - 1; i >= 0; i-- {
+		id := fmt.Sprintf("page-%d", i)
+		pages[id] = SimplePage(id, pageList[i], prevID)
+		prevID = id
+	}
+	novel.Scenes[name] = SimpleScene(name, "page-0", pages, nextScene)
+	return nil
+}
+
+// ParseSceneString parses and adds a new scene from a string.
+func (novel *Novel) ParseSceneString(name, nextScene, source string) error {
+	reader := strings.NewReader(source)
+	return novel.ParseScene(name, nextScene, reader)
 }
 
 // A Scene represents a series of pages/videos/choices/etc. within a novel.

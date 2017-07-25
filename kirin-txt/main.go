@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"strings"
 
 	"github.com/kirin-vn/engine"
-	"github.com/kirin-vn/lexer"
 )
 
 func main() {
@@ -32,36 +29,12 @@ const (
 )
 
 func testNovel() *engine.Novel {
-	return &engine.Novel{
-		Name:       "Test Novel",
-		FirstScene: "first-scene",
-		Scenes: map[string]engine.Scene{
-			"first-scene":  readScene("first-scene", "second-scene", sceneOne),
-			"second-scene": readScene("second-scene", "", sceneTwo),
-		},
+	novel := engine.NewNovel("Test Novel", "first-scene")
+	if err := novel.ParseSceneString("first-scene", "second-scene", sceneOne); err != nil {
+		panic(err)
 	}
-}
-
-func readScene(id string, next string, source string) engine.Scene {
-	reader := strings.NewReader(source)
-	var pageList []string
-	for token := range lexer.Tokenize(reader) {
-		switch token.Name {
-		case lexer.Line:
-			pageList = append(pageList, strings.Join(token.Args, ""))
-		default:
-			log.Printf("Unrecognized kind of token: %s\n", token.Name)
-		}
+	if err := novel.ParseSceneString("second-scene", "", sceneTwo); err != nil {
+		panic(err)
 	}
-	if len(pageList) == 0 {
-		panic("tried to parse empty scene")
-	}
-	pages := make(map[string]engine.Page)
-	var prevID string
-	for i := len(pageList) - 1; i >= 0; i-- {
-		id := fmt.Sprintf("page-%d", i)
-		pages[id] = engine.SimplePage(id, pageList[i], prevID)
-		prevID = id
-	}
-	return engine.SimpleScene(id, "page-0", pages, next)
+	return novel
 }
