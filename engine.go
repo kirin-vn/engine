@@ -11,12 +11,15 @@ type Engine struct {
 }
 
 // New constructs a new engine for reading through the Novel.
-func New(novel *Novel) *Engine {
+func New(novel *Novel) (*Engine, error) {
+	if err := novel.Validate(); err != nil {
+		return nil, err
+	}
 	return &Engine{
 		novel: novel,
 		scene: novel.FirstScene,
 		page:  novel.Scenes[novel.FirstScene].FirstPage(),
-	}
+	}, nil
 }
 
 // Name returns the name of the visual novel.

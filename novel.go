@@ -65,6 +65,39 @@ func (novel *Novel) ParseSceneString(name, nextScene, source string) error {
 	return novel.ParseScene(name, nextScene, reader)
 }
 
+// Validate validates that the novel references no undefined IDs,
+// has a starting scene, and has a starting page for every scene.
+func (novel *Novel) Validate() error {
+	if !novel.validateSceneID(novel.FirstScene) {
+		return errors.New("undefined first scene")
+	}
+	for _, scene := range novel.Scenes {
+		if next := scene.NextScene(); next != "" && !novel.validateSceneID(next) {
+			return errors.New("undefined next scene")
+		}
+		page := scene.FirstPage()
+		if page == "" {
+			return errors.New("undefined first page")
+		}
+		for page != "" {
+			if !novel.validatePageID(scene, page) {
+				return errors.New("undefined next page")
+			}
+			page = scene.GetPage(page).NextPage()
+		}
+	}
+	return nil
+}
+
+func (novel *Novel) validatePageID(scene Scene, page string) bool {
+	return scene.GetPage(page) != nil
+}
+
+func (novel *Novel) validateSceneID(scene string) bool {
+	_, found := novel.Scenes[scene]
+	return found
+}
+
 // A Scene represents a series of pages/videos/choices/etc. within a novel.
 type Scene interface {
 	ID() string

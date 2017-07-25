@@ -8,7 +8,10 @@ import (
 
 func main() {
 	novel := testNovel()
-	engine := engine.New(novel)
+	engine, err := engine.New(novel)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("Playing %s\n\n", engine.Name())
 	for {
 		page := engine.CurrentPage()
